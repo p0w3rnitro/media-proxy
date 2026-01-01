@@ -1,0 +1,21 @@
+{
+  "name": "media-proxy",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --env development --local --persist-to .wrangler/state",
+    "dev:remote": "wrangler dev --env development",
+    "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "types": "wrangler types",
+    "kv:create": "wrangler kv:namespace create SESSION_KV && wrangler kv:namespace create BLACKLIST_KV",
+    "test:health": "curl http://localhost:8787/health",
+    "test:init": "curl -X POST http://localhost:8787/v2/init"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.91.0"
+  }
+}

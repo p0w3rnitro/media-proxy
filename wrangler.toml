@@ -1,0 +1,144 @@
+# Cloudflare Worker configuration
+name = "media-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-12-07"
+
+# Free tier: 100,000 requests/day
+# Workers Paid: $5/month for 10M requests, unlimited bandwidth (much cheaper than Vercel!)
+
+# Enable Workers Logs (viewable in Cloudflare Dashboard > Workers > Logs)
+# Logs are automatically captured from console.log/error/warn
+
+# Observability settings
+[observability]
+enabled = true
+
+# Tail workers for real-time log streaming
+# Run: npx wrangler tail media-proxy
+# This streams logs in real-time to your terminal
+
+# Environment variables - set via wrangler secret or Cloudflare dashboard
+# wrangler secret put RPI_PROXY_URL
+# wrangler secret put RPI_PROXY_KEY
+# wrangler secret put SIGNING_SECRET
+[vars]
+LOG_LEVEL = "debug"  # debug, info, warn, error
+# API_KEY = "your-secret-key"  # Optional: for protecting the proxy
+# ALLOWED_ORIGINS = "https://tv.vynx.cc,https://localhost:3000"  # Comma-separated allowed origins for analytics CORS
+
+# =============================================================================
+# ANTI-LEECH PROTECTION SETTINGS
+# =============================================================================
+# Protection modes:
+#   "none"     - No protection (legacy, anyone can use proxy)
+#   "basic"    - Token + fingerprint binding (spoofable with effort)
+#   "fortress" - PoW + Session + Request chaining (very secure)
+#   "quantum"  - THE MOST PARANOID PROTECTION EVER CREATED
+#
+# QUANTUM MODE features:
+#   - Browser proofs (Canvas, Audio, WebGL fingerprints)
+#   - WASM challenges (can't run in Node.js easily)
+#   - Merkle tree request verification
+#   - Honeypot URLs that trap leechers
+#   - Invisible watermarks in video segments
+#   - Behavioral timing analysis
+#   - ASN/datacenter detection
+#   - 24-hour blacklisting for violators
+#   - Trust score system
+#
+PROTECTION_MODE = "none"
+
+# Legacy setting (use PROTECTION_MODE instead)
+# ENABLE_ANTI_LEECH = "false"
+
+# =============================================================================
+# SECRETS - Set via wrangler secret put <NAME>
+# =============================================================================
+# ANALYTICS PROXY (required for /analytics/* routes):
+#   wrangler secret put DATABASE_URL        # Neon connection string
+#                                           # Format: postgresql://user:pass@host/db?sslmode=require
+#
+# TMDB PROXY (required for /tmdb/* routes):
+#   wrangler secret put TMDB_API_KEY        # Your TMDB API key (v3 auth)
+#                                           # Get from: https://www.themoviedb.org/settings/api
+#
+# ANTI-LEECH PROTECTION:
+#   wrangler secret put SIGNING_SECRET      # Required for all modes except 'none'
+#   wrangler secret put WATERMARK_SECRET    # Required for quantum mode (watermarks video)
+#
+# RPI RESIDENTIAL PROXY (for DLHD, IPTV, and AnimeKai streaming)
+# Required to bypass datacenter IP blocking by IPTV providers and MegaUp CDN
+# wrangler secret put RPI_PROXY_URL       # Your RPi proxy URL (e.g., https://xxx.trycloudflare.com)
+# wrangler secret put RPI_PROXY_KEY       # Your RPi proxy API key
+#
+# AnimeKai uses MegaUp CDN which blocks:
+#   1. Datacenter IPs (Cloudflare, AWS, etc.)
+#   2. Requests with Origin header
+# The /animekai route forwards to RPI proxy which fetches from residential IP
+#
+# OXYLABS RESIDENTIAL PROXY (alternative for DLHD streaming)
+# wrangler secret put OXYLABS_USERNAME    # Your Oxylabs username
+# wrangler secret put OXYLABS_PASSWORD    # Your Oxylabs password
+#
+# Optional Oxylabs settings (set in [vars] section):
+# OXYLABS_ENDPOINT = "https://realtime.oxylabs.io/v1/queries"
+# OXYLABS_COUNTRY = "us"                  # Target country (us, uk, de, etc.)
+# OXYLABS_CITY = "new_york"               # Target city (optional)
+
+# =============================================================================
+# KV NAMESPACE BINDINGS
+# =============================================================================
+# Create namespaces (note: no colon between kv and namespace):
+#   wrangler kv namespace create "SESSION_KV"
+#   wrangler kv namespace create "BLACKLIST_KV"
+#   wrangler kv namespace create "STREAM_TOKENS"
+#
+# Then uncomment and add the IDs:
+#
+# [[kv_namespaces]]
+# binding = "SESSION_KV"
+# id = "your-session-kv-id"
+#
+# [[kv_namespaces]]
+# binding = "BLACKLIST_KV"
+# id = "your-blacklist-kv-id"
+#
+# [[kv_namespaces]]
+# binding = "STREAM_TOKENS"
+# id = "your-stream-tokens-kv-id"
+
+# Production environment
+[env.production]
+name = "media-proxy"
+# Uncomment and configure if you have a custom domain:
+# routes = [{ pattern = "proxy.yourdomain.com/*", zone_name = "yourdomain.com" }]
+
+[env.production.observability]
+enabled = true
+
+# Development environment  
+[env.development]
+name = "media-proxy-dev"
+
+[env.development.vars]
+LOG_LEVEL = "debug"
+PROTECTION_MODE = "quantum-v2"
+SIGNING_SECRET = "dev-signing-secret-change-in-prod"
+WATERMARK_SECRET = "dev-watermark-secret-change-in-prod"
+
+[env.development.observability]
+enabled = true
+
+# Local KV for development (persisted to .wrangler/state)
+# For local dev, wrangler creates these automatically
+[[env.development.kv_namespaces]]
+binding = "SESSION_KV"
+id = "0000000000000000000000000000000000000001"
+
+[[env.development.kv_namespaces]]
+binding = "BLACKLIST_KV"
+id = "0000000000000000000000000000000000000002"
+
+[[env.development.kv_namespaces]]
+binding = "STREAM_TOKENS"
+id = "0000000000000000000000000000000000000003"

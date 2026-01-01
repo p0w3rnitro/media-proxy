@@ -1,0 +1,23 @@
+# Copy this to .dev.vars for local development
+# These are used by wrangler dev
+
+# Optional: RPI proxy for TV streams (if CDN blocks direct requests)
+RPI_PROXY_URL=https://your-rpi-proxy.com
+RPI_PROXY_KEY=your-api-key
+
+# Optional: API key to protect the proxy
+API_KEY=your-secret-key
+
+# =============================================================================
+# OXYLABS RESIDENTIAL PROXY (for DLHD streaming via /dlhd route)
+# =============================================================================
+# Sign up at https://oxylabs.io/ for residential proxy access
+OXYLABS_USERNAME=your-oxylabs-username
+OXYLABS_PASSWORD=your-oxylabs-password
+
+# Optional: Target specific geo-location
+# OXYLABS_COUNTRY=us
+# OXYLABS_CITY=new_york
+
+# Optional: Custom endpoint (default is Realtime API)
+# OXYLABS_ENDPOINT=https://realtime.oxylabs.io/v1/queries
